@@ -1,0 +1,6 @@
+{
+  "name": "Smart Timetable Generator",
+  "description": "A sophisticated scheduling system for university departments that automatically generates conflict-free timetables respecting teacher, room, and group constraints.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
