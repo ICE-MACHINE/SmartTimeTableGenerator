@@ -20,6 +20,17 @@
   --f-serif: "Playfair Display", serif;
 }
 
+:root[data-theme="light"] {
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --surface-glass: rgba(255, 255, 255, 0.8);
+  --border: rgba(0, 0, 0, 0.08);
+  --accent: #0284c7;
+  --accent-glow: rgba(2, 132, 199, 0.3);
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+}
+
 body {
   margin: 0;
   font-family: var(--font-sans);
@@ -71,4 +82,32 @@ body {
 .bg-grid {
   background-image: radial-gradient(var(--border) 1px, transparent 1px);
   background-size: 40px 40px;
+}
+@media print {
+  /* إخفاء كل شيء في الصفحة */
+  body * {
+    visibility: hidden;
+  }
+  /* إظهار الجدول فقط وما بداخله */
+  #printable-table, #printable-table * {
+    visibility: visible;
+  }
+  /* تحديد مكان الجدول في أعلى الصفحة المطبوعة */
+  #printable-table {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+  /* إخفاء ظلال الـ Glassmorphism لتحسين جودة الطباعة */
+  .glass {
+    background: white !important;
+    color: black !important;
+    box-shadow: none !important;
+    border: 1px solid #ccc !important;
+  }
+}
+@page {
+  size: landscape;
+  margin: 10mm;
 }

@@ -7,14 +7,13 @@
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
-
 import React, { useState, useMemo } from 'react';
 import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { 
   ThemeProvider, createTheme, CssBaseline, 
   Box, Drawer, AppBar, Toolbar, List, Typography, 
   Divider, ListItem, ListItemButton, ListItemIcon, ListItemText,
-  Container, Paper, Button, IconButton
+  Container, Paper, Button, IconButton, useTheme
 } from '@mui/material';
 import { 
   LayoutDashboard, 
@@ -25,7 +24,10 @@ import {
   CalendarRange, 
   Settings,
   Menu as MenuIcon,
-  ChevronLeft as ChevronLeftIcon
+  ChevronLeft as ChevronLeftIcon,
+  Sun,
+  Moon,
+  LogOut
 } from 'lucide-react';
 
 import { 
@@ -40,61 +42,59 @@ import Dashboard from './pages/Dashboard';
 import DataManagement from './pages/DataManagement';
 import ScheduleGenerator from './pages/ScheduleGenerator';
 import TimetableView from './pages/TimetableView';
+import Login from './pages/Login';
+import Logout from './pages/Logout';
+import { getToken } from './utils/auth';
+import { Navigate } from 'react-router-dom';
+
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const token = getToken();
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+  return <>{children}</>;
+}
 
 const drawerWidth = 260;
 
-const theme = createTheme({
+export const ColorModeContext = React.createContext({ toggleColorMode: () => {} });
+
+const getDesignTokens = (mode: 'light' | 'dark') => ({
   palette: {
-    mode: 'dark',
-    primary: {
-      main: '#38BDF8', // Sky Blue
-      contrastText: '#05070A',
-    },
-    secondary: {
-      main: '#8B949E',
-    },
-    background: {
-      default: '#05070A',
-      paper: '#0D1117',
-    },
-    text: {
-      primary: '#F0F6FC',
-      secondary: '#8B949E',
-    },
-    divider: 'rgba(255, 255, 255, 0.08)',
+    mode,
+    ...(mode === 'light'
+      ? {
+          primary: { main: '#0284c7', contrastText: '#ffffff' },
+          secondary: { main: '#64748b' },
+          background: { default: '#f8fafc', paper: '#ffffff' },
+          text: { primary: '#0f172a', secondary: '#475569' },
+          divider: 'rgba(0, 0, 0, 0.08)',
+        }
+      : {
+          primary: { main: '#38BDF8', contrastText: '#05070A' },
+          secondary: { main: '#8B949E' },
+          background: { default: '#05070A', paper: '#0D1117' },
+          text: { primary: '#F0F6FC', secondary: '#8B949E' },
+          divider: 'rgba(255, 255, 255, 0.08)',
+        }),
   },
-  shape: {
-    borderRadius: 12,
-  },
+  shape: { borderRadius: 12 },
   typography: {
     fontFamily: '"Inter", "Helvetica Neue", Helvetica, Arial, sans-serif',
-    h4: {
-      fontFamily: '"Playfair Display", serif',
-      fontWeight: 700,
-      letterSpacing: '-0.02em',
-    },
-    h5: {
-      fontFamily: '"Playfair Display", serif',
-      fontWeight: 600,
-    },
-    h6: {
-      fontFamily: '"Playfair Display", serif',
-      fontWeight: 600,
-    },
-    button: {
-      textTransform: 'none',
-      fontWeight: 600,
-      letterSpacing: '0.02em',
-    },
+    h4: { fontFamily: '"Playfair Display", serif', fontWeight: 700, letterSpacing: '-0.02em' },
+    h5: { fontFamily: '"Playfair Display", serif', fontWeight: 600 },
+    h6: { fontFamily: '"Playfair Display", serif', fontWeight: 600 },
+    button: { textTransform: 'none' as const, fontWeight: 600, letterSpacing: '0.02em' },
   },
   components: {
     MuiAppBar: {
       styleOverrides: {
         root: {
-          backgroundColor: 'rgba(13, 17, 23, 0.8)',
+          backgroundColor: mode === 'light' ? 'rgba(255, 255, 255, 0.8)' : 'rgba(13, 17, 23, 0.8)',
           backdropFilter: 'blur(12px)',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+          borderBottom: mode === 'light' ? '1px solid rgba(0, 0, 0, 0.08)' : '1px solid rgba(255, 255, 255, 0.08)',
           boxShadow: 'none',
+          color: mode === 'light' ? '#0f172a' : '#fff',
           height: 72,
           justifyContent: 'center',
         },
@@ -103,8 +103,8 @@ const theme = createTheme({
     MuiDrawer: {
       styleOverrides: {
         paper: {
-          backgroundColor: '#0D1117',
-          borderRight: '1px solid rgba(255, 255, 255, 0.08)',
+          backgroundColor: mode === 'light' ? '#ffffff' : '#0D1117',
+          borderRight: mode === 'light' ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255, 255, 255, 0.08)',
         },
       },
     },
@@ -116,17 +116,17 @@ const theme = createTheme({
           transition: 'all 0.2s ease',
         },
         contained: {
-          boxShadow: '0 4px 12px rgba(56, 189, 248, 0.2)',
+          boxShadow: mode === 'light' ? '0 4px 12px rgba(2, 132, 199, 0.2)' : '0 4px 12px rgba(56, 189, 248, 0.2)',
           '&:hover': {
-            boxShadow: '0 6px 16px rgba(56, 189, 248, 0.3)',
+            boxShadow: mode === 'light' ? '0 6px 16px rgba(2, 132, 199, 0.3)' : '0 6px 16px rgba(56, 189, 248, 0.3)',
             transform: 'translateY(-1px)',
           },
         },
         outlined: {
-          borderColor: 'rgba(255, 255, 255, 0.1)',
+          borderColor: mode === 'light' ? 'rgba(0,0,0,0.1)' : 'rgba(255, 255, 255, 0.1)',
           '&:hover': {
-            backgroundColor: 'rgba(255, 255, 255, 0.03)',
-            borderColor: 'rgba(255, 255, 255, 0.2)',
+            backgroundColor: mode === 'light' ? 'rgba(0,0,0,0.03)' : 'rgba(255, 255, 255, 0.03)',
+            borderColor: mode === 'light' ? 'rgba(0,0,0,0.2)' : 'rgba(255, 255, 255, 0.2)',
           },
         },
       },
@@ -135,9 +135,9 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           backgroundImage: 'none',
-          backgroundColor: '#0D1117',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)',
+          backgroundColor: mode === 'light' ? '#ffffff' : '#0D1117',
+          border: mode === 'light' ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255, 255, 255, 0.08)',
+          boxShadow: mode === 'light' ? '0 4px 20px rgba(0,0,0,0.05)' : '0 4px 20px rgba(0, 0, 0, 0.2)',
         },
       },
     },
@@ -147,13 +147,13 @@ const theme = createTheme({
           borderRadius: 8,
           margin: '4px 12px',
           '&.Mui-selected': {
-            backgroundColor: 'rgba(56, 189, 248, 0.1)',
-            color: '#38BDF8',
+            backgroundColor: mode === 'light' ? 'rgba(2, 132, 199, 0.1)' : 'rgba(56, 189, 248, 0.1)',
+            color: mode === 'light' ? '#0284c7' : '#38BDF8',
             '& .MuiListItemIcon-root': {
-              color: '#38BDF8',
+              color: mode === 'light' ? '#0284c7' : '#38BDF8',
             },
             '&:hover': {
-              backgroundColor: 'rgba(56, 189, 248, 0.15)',
+              backgroundColor: mode === 'light' ? 'rgba(2, 132, 199, 0.15)' : 'rgba(56, 189, 248, 0.15)',
             },
           },
         },
@@ -162,9 +162,23 @@ const theme = createTheme({
   },
 });
 
-function AppContent() {
+function AppContent({ mode }: { mode: 'light' | 'dark' }) {
   const [open, setOpen] = useState(true);
   const location = useLocation();
+  const { toggleColorMode } = React.useContext(ColorModeContext);
+  const theme = useTheme();
+
+  const isAuthPage = location.pathname.toLowerCase() === '/login' || location.pathname.toLowerCase() === '/logout';
+
+  if (isAuthPage) {
+    return (
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/Logout" element={<Logout />} />
+        <Route path="/logout" element={<Logout />} />
+      </Routes>
+    );
+  }
 
   const toggleDrawer = () => {
     setOpen(!open);
@@ -223,7 +237,13 @@ function AppContent() {
               </Typography>
             </Box>
           </Box>
-          <Box sx={{ display: 'flex', gap: 1.5 }}>
+          <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
+            <IconButton onClick={toggleColorMode} color="inherit" sx={{ mr: 1 }}>
+              {mode === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+            </IconButton>
+            <IconButton component={Link} to="/Logout" color="inherit" sx={{ mr: 1 }}>
+              <LogOut color='red' size={20} />
+            </IconButton>
             <Button variant="outlined" component={Link} to="/data" size="small">Manage Data</Button>
             <Button variant="contained" color="primary" component={Link} to="/generate" size="small">Synthesize</Button>
           </Box>
@@ -291,10 +311,10 @@ function AppContent() {
         <Toolbar sx={{ height: 72 }} />
         <Container maxWidth="xl" sx={{ py: 2 }}>
           <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/data" element={<DataManagement />} />
-            <Route path="/generate" element={<ScheduleGenerator />} />
-            <Route path="/timetable" element={<TimetableView />} />
+            <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/data" element={<ProtectedRoute><DataManagement /></ProtectedRoute>} />
+            <Route path="/generate" element={<ProtectedRoute><ScheduleGenerator /></ProtectedRoute>} />
+            <Route path="/timetable" element={<ProtectedRoute><TimetableView /></ProtectedRoute>} />
           </Routes>
         </Container>
       </Box>
@@ -303,12 +323,31 @@ function AppContent() {
 }
 
 export default function App() {
+ 
+
+  const [mode, setMode] = useState<'light' | 'dark'>('dark');
+
+  const colorMode = useMemo(() => ({
+    toggleColorMode: () => {
+      setMode((prevMode) => {
+        const nextMode = prevMode === 'light' ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', nextMode);
+        return nextMode;
+      });
+    },
+  }), []);
+
+  const theme = useMemo(() => createTheme(getDesignTokens(mode)), [mode]);
+
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <BrowserRouter>
-        <AppContent />
-      </BrowserRouter>
-    </ThemeProvider>
+    <ColorModeContext.Provider value={colorMode}>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <BrowserRouter>
+          <AppContent mode={mode} />
+          
+        </BrowserRouter>
+      </ThemeProvider>
+    </ColorModeContext.Provider>
   );
 }
