@@ -337,10 +337,7 @@ function AppContent({ mode }: { mode: "light" | "dark" }) {
             >
               {mode === "dark" ? <Sun size={20} /> : <Moon size={20} />}
             </IconButton>
-            <IconButton
-              color="inherit"
-              sx={{ mr: 1 }}
-            >
+            <IconButton color="inherit" sx={{ mr: 1 }}>
               <LogOut color="red" size={20} />
             </IconButton>
             <Button variant="outlined" component={Link} to="/data" size="small">
@@ -491,7 +488,7 @@ export default function App() {
     <ColorModeContext.Provider value={colorMode}>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <BrowserRouter>
+        <BrowserRouter basename="SmartTimeTableGenerator">
           <AppContent mode={mode} />
         </BrowserRouter>
       </ThemeProvider>
